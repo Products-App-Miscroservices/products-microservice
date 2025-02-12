@@ -142,6 +142,19 @@ npx prisma init
 npx prisma generate
 ```
 
+5. Extender servicio que va a interactuar con la base de datos.
+```ts
+export class ProductsService extends PrismaClient implements OnModuleInit {
+
+    private readonly logger = new Logger('Products Service')
+
+    onModuleInit() {
+        this.$connect();
+        this.logger.log('MongoDb connected');
+    }
+}
+```
+
 ## Paquetes para validaciones
 1. Instalar paquetes.
 ```bash
@@ -312,3 +325,21 @@ __src/config/services.ts__
 export const NATS_SERVICE = 'NATS_SERVICE';
 ```
 
+# Nats
+- Se debe tener el servidor de NATS corriendo, el cual se puede correr con docker compose o con el siguiente comando:
+```bash
+docker run -d --name nats-main -p 4222:4222 -p 6222:6222 -p 8222:8222 nats
+```
+
+- Puertos
+  - 4222: Donde la comunicación de NATS sucede. Por acá van a hablar los microservicios.
+  - 6222: Puerto que se recomienda sea usado para __clustering__. En el curso se omitió este puerto.
+  - 8222: Puerto para gestión HTTP para información de reportaje.
+
+# Dcokerización
+1. Colocar docker-compose en root que contiene a todos los proyectos.
+2. Colocar __.dockerignore__ y __dockerfile__ en cada repositorio.
+
+## Repoisotrio que usa MongoDB y prisma
+1. Colocar comando para generar cliente de prisma en __package.json__
+2. Usar script cuando se ejecuta script de __npm run start:dev__.

@@ -13,6 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Se recomienda colocar modelos en singular y camelCase. Si se quiere tomar las tablas ya creadas acá debe ser products en lugar de Product
 model Product {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
@@ -20,12 +21,12 @@ model Product {
   price       Float
   images      String[]
   description String
+  available   Boolean  @default(true)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
   reviews     Review[]
   reactions   Reaction[]
-  productCard ProductCart?
+  productCart ProductCart[]
 }
 
 model Review {
