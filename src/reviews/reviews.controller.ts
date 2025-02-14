@@ -3,6 +3,7 @@ import { ReviewsService } from './reviews.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
 
 @Controller()
 export class ReviewsController {
@@ -24,13 +25,17 @@ export class ReviewsController {
   }
 
   @MessagePattern('reviews.update')
-  update() {
-    return 'Método para hacer update a review';
+  update(
+    @Payload() updateReviewDto: UpdateReviewDto
+  ) {
+    return this.reviewsService.update(updateReviewDto.id, updateReviewDto);
   }
 
   @MessagePattern('reviews.delete')
-  delete() {
-    return 'Método para hacer delete a review';
+  delete(
+    @Payload('id') id: string
+  ) {
+    return this.reviewsService.delete(id);
   }
 
 }
