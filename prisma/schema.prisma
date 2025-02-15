@@ -13,6 +13,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ReactionOptions {
+  love
+  like
+  dislike
+}
+
 // Se recomienda colocar modelos en singular y camelCase. Si se quiere tomar las tablas ya creadas acá debe ser products en lugar de Product
 model Product {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -47,7 +53,7 @@ model Review {
 model Reaction {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   authorId  String   @db.ObjectId
-  reaction  String
+  reaction  ReactionOptions
   available Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
