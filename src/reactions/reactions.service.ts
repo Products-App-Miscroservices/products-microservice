@@ -102,4 +102,17 @@ export class ReactionsService extends PrismaClient implements OnModuleInit {
             }
         })
     }
+
+    async getUserReactions(authorId: string , productId: string ) {
+        const reactions = await this.reaction.findMany({
+            where: { 
+                authorId,
+                productId
+            }
+        })
+
+        return {
+            data: reactions
+        }
+    }
 }

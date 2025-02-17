@@ -30,9 +30,9 @@ model Product {
   available   Boolean  @default(true)
   createdAt   DateTime @default(now())
 
-  reviews     Review[]
-  reactions   Reaction[]
-  productCart ProductCart[]
+  reviews   Review[]
+  reactions Reaction[]
+  cart      Cart[]
 }
 
 model Review {
@@ -51,12 +51,12 @@ model Review {
 }
 
 model Reaction {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  authorId  String   @db.ObjectId
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
+  authorId  String          @db.ObjectId
   reaction  ReactionOptions
-  available Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  available Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
   review   Review @relation(fields: [reviewId], references: [id])
   reviewId String @db.ObjectId
@@ -65,7 +65,7 @@ model Reaction {
   productId String  @db.ObjectId
 }
 
-model ProductCart {
+model Cart {
   id       String @id @default(auto()) @map("_id") @db.ObjectId
   authorId String @db.ObjectId
 

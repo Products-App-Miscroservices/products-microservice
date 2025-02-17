@@ -4,6 +4,8 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { RpcException } from '@nestjs/microservices';
+import { ProductEntity } from './entities/product.entity';
+import { CustomError } from 'src/common/error/custom-error';
 
 @Injectable()
 export class ProductsService extends PrismaClient implements OnModuleInit {
@@ -20,16 +22,32 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
 
         const totalElements = await this.product.count({ where: { available: true } });
         const totalPages = Math.ceil(totalElements / limit);
+        const products = await this.product.findMany({
+            // skip es índice 0
+            skip: (page - 1) * limit,
+            take: limit,
+            where: {
+                available: true
+            },
+            include: {
+                reviews: {
+                    select: {
+                        rating: true
+                    },
+                }
+            }
+        });
+
+        const transformedProducts = products.map(product => ({
+            ...product,
+            rating: product.reviews.length
+                ? product.reviews.reduce((sum, review) => sum + review.rating, 0)/product.reviews.length
+                : 0,
+            totalReviews: product.reviews.length
+        }))
 
         return {
-            data: await this.product.findMany({
-                // skip es índice 0
-                skip: (page - 1) * limit,
-                take: limit,
-                where: {
-                    available: true
-                }
-            }),
+            data: transformedProducts.map(ProductEntity.fromObject),
             meta: {
                 total: totalElements,
                 page: page,
@@ -37,6 +55,37 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
             }
         }
 
+    }
+
+    async findById(id: string) { 
+        const product = await this.product.findFirst({
+            where: { 
+                id
+            },
+            include: {
+                reviews: {
+                    select: {
+                        rating: true
+                    }
+                }
+            }
+        }); 
+
+        if(!product) {
+            throw CustomError.badRequest(`Product with id ${id} not found`);
+        }
+
+        const transformedProduct = {
+            ...product,
+            rating: product.reviews.length
+                ? product.reviews.reduce((sum, review) => sum + review.rating, 0)/product.reviews.length
+                : 0,
+            totalReviews: product.reviews.length
+        }
+
+        return {
+            data: ProductEntity.fromObject(transformedProduct)
+        }
     }
 
     async create(createProductDto: CreateProductDto) {

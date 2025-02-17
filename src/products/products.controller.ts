@@ -16,6 +16,13 @@ export class ProductsController {
     return this.productsService.findAll(paginationDto);
   }
 
+  @MessagePattern('products.get.product')
+  findOne(
+    @Payload('id') id: string
+  ){
+    return this.productsService.findById(id);
+  }
+
   @MessagePattern('products.create')
   create(
     @Payload() createProductDto: CreateProductDto

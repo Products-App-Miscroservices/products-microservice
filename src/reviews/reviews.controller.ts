@@ -17,6 +17,14 @@ export class ReviewsController {
     return this.reviewsService.getProductReviews(id, paginationDto);
   }
 
+  @MessagePattern('reviews.get.review')
+  findOne(
+    @Payload('productId') productId: string,
+    @Payload('authorId') authorId: string,
+  ){
+    return this.reviewsService.findByProductId(productId, authorId);
+  }
+
   @MessagePattern('reviews.create')
   create(
     @Payload() createReviewDto: CreateReviewDto

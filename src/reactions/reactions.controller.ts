@@ -24,6 +24,14 @@ export class ReactionsController {
     return this.reactionsService.create(createReactionDto);
   }
 
+  @MessagePattern('reactions.user.get')
+  getUserReactions(
+    @Payload('productId') productId: string,
+    @Payload('authorId') authorId: string,
+  ) {
+    return this.reactionsService.getUserReactions(authorId, productId);
+  }
+
   @MessagePattern('reactions.update')
   updateReaction(
     @Payload() updateReactionDto: UpdateReactionDto

@@ -1,12 +1,22 @@
-import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { NATS_SERVICE } from 'src/config/services';
+import { firstValueFrom } from 'rxjs';
+import { CustomError } from 'src/common/error/custom-error';
 
 @Injectable()
 export class ReviewsService extends PrismaClient implements OnModuleInit {
+
+    constructor(
+        @Inject(NATS_SERVICE) private readonly client: ClientProxy
+    ) {
+        super()
+    }
+
     private readonly logger = new Logger('Reviews Service');
     onModuleInit() {
         this.$connect();
@@ -24,16 +34,50 @@ export class ReviewsService extends PrismaClient implements OnModuleInit {
         });
         const totalPages = Math.ceil(totalElements / limit);
 
-        return {
-            data: await this.review.findMany({
-                // skip es índice 0
-                skip: (page - 1) * limit,
-                take: limit,
-                where: {
-                    available: true,
-                    productId: productId
+        const reviews = await this.review.findMany({
+            // skip es índice 0
+            skip: (page - 1) * limit,
+            take: limit,
+            where: {
+                available: true,
+                productId: productId
+            },
+            include: {
+                reactions: {
+                    select: {
+                        reaction: true
+                    }
                 }
-            }),
+            }
+        });
+
+        const userIds = reviews.map(review => review.authorId);
+
+        const usersData = await firstValueFrom(this.client.send('auth.get.users', { ids: userIds }));
+
+        const usersObj = usersData.data.reduce((obj, user) => {
+            obj[user.id] = { username: user.username, id: user.id }
+            return obj
+        }, {})
+
+        const transformedReviews = reviews.map(review => ({
+            ...review,
+            author: usersObj[review.authorId],
+            reactions: review.reactions.reduce((sum, obj) => {
+                const { reaction } = obj;
+
+                if (!(reaction in sum)) {
+                    sum[reaction] = 0
+                }
+
+                sum[reaction] += 1
+
+                return sum
+            }, {})
+        }))
+
+        return {
+            data: transformedReviews,
             meta: {
                 total: totalElements,
                 page: page,
@@ -100,5 +144,23 @@ export class ReviewsService extends PrismaClient implements OnModuleInit {
                 available: false
             }
         });
+    }
+
+    async findByProductId(productId: string, authorId: string) { 
+
+        const review = await this.review.findFirst({
+            where: { 
+                productId,
+                authorId
+            }
+        }); 
+
+        if(!review) {
+            throw CustomError.badRequest(`Review with id ${productId} not found`);
+        }
+
+        return {
+            data: review
+        }
     }
 }
