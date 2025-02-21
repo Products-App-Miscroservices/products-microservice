@@ -19,7 +19,7 @@ export class ProductsController {
   @MessagePattern('products.get.product')
   findOne(
     @Payload('id') id: string
-  ){
+  ) {
     return this.productsService.findById(id);
   }
 
@@ -42,5 +42,10 @@ export class ProductsController {
     @Payload('id') id: string
   ) {
     return this.productsService.delete(id);
+  }
+
+  @MessagePattern('products.validate')
+  validateProducts(@Payload() ids: string[]) {
+    return this.productsService.validateProducts(ids);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -41,7 +41,7 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
         const transformedProducts = products.map(product => ({
             ...product,
             rating: product.reviews.length
-                ? product.reviews.reduce((sum, review) => sum + review.rating, 0)/product.reviews.length
+                ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length
                 : 0,
             totalReviews: product.reviews.length
         }))
@@ -57,9 +57,9 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
 
     }
 
-    async findById(id: string) { 
+    async findById(id: string) {
         const product = await this.product.findFirst({
-            where: { 
+            where: {
                 id
             },
             include: {
@@ -69,16 +69,16 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
                     }
                 }
             }
-        }); 
+        });
 
-        if(!product) {
+        if (!product) {
             throw CustomError.badRequest(`Product with id ${id} not found`);
         }
 
         const transformedProduct = {
             ...product,
             rating: product.reviews.length
-                ? product.reviews.reduce((sum, review) => sum + review.rating, 0)/product.reviews.length
+                ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length
                 : 0,
             totalReviews: product.reviews.length
         }
@@ -114,6 +114,27 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
                 available: false
             }
         });
+    }
+
+    async validateProducts(ids: string[]) {
+        ids = Array.from(new Set(ids));
+
+        const products = await this.product.findMany({
+            where: {
+                id: {
+                    in: ids
+                }
+            }
+        });
+
+        if (products.length !== ids.length) {
+            throw new RpcException({
+                message: 'Some products were not found',
+                status: HttpStatus.BAD_REQUEST
+            })
+        }
+
+        return products;
     }
 
 }
