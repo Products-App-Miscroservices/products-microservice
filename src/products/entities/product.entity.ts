@@ -8,12 +8,13 @@ export class ProductEntity {
         public authorId: string,
         public images: string[],
         public description: string,
+        public slug: string,
         public rating?: number,
-        public totalReviews?: number,
+        public totalReviews?: number
     ) { }
 
     static fromObject(object: { [key: string]: any }) {
-        const { id, title, price, authorId, images, description, rating, totalReviews } = object;
+        const { id, title, price, authorId, images, description, rating, totalReviews, slug } = object;
 
         if (!id) throw CustomError.badRequest('Product Mapper. Missing id');
         if (!title) throw CustomError.badRequest('Product Mapper. Missing title');
@@ -24,6 +25,6 @@ export class ProductEntity {
         if (!rating && isNaN(rating)) throw CustomError.badRequest('Product Mapper. Rating must be a number');
         if (!totalReviews && isNaN(totalReviews)) throw CustomError.badRequest('Product Mapper. Total Reviews must be a number');
 
-        return new ProductEntity(id, title, price, authorId, images, description, rating, totalReviews);
+        return new ProductEntity(id, title, price, authorId, images, description, slug, rating, totalReviews);
     }
 }

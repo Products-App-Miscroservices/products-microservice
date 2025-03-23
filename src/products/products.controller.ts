@@ -23,6 +23,13 @@ export class ProductsController {
     return this.productsService.findById(id);
   }
 
+  @MessagePattern('products.get.product.slug')
+  findBySlug(
+    @Payload('slug') slug: string
+  ) {
+    return this.productsService.findBySlug(slug);
+  }
+
   @MessagePattern('products.create')
   create(
     @Payload() createProductDto: CreateProductDto

@@ -26,4 +26,8 @@ export class CreateProductDto {
     @MinLength(5)
     public description: string;
 
+    @IsString()
+    @MinLength(1)
+    public slug: string;
+
 }

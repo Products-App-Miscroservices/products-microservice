@@ -88,6 +88,37 @@ export class ProductsService extends PrismaClient implements OnModuleInit {
         }
     }
 
+    async findBySlug(slug: string) {
+        const product = await this.product.findFirst({
+            where: {
+                slug
+            },
+            include: {
+                reviews: {
+                    select: {
+                        rating: true
+                    }
+                }
+            }
+        });
+
+        if (!product) {
+            throw CustomError.badRequest(`Product with id ${slug} not found`);
+        }
+
+        const transformedProduct = {
+            ...product,
+            rating: product.reviews.length
+                ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length
+                : 0,
+            totalReviews: product.reviews.length
+        }
+
+        return {
+            data: ProductEntity.fromObject(transformedProduct)
+        }
+    }
+
     async create(createProductDto: CreateProductDto) {
         return this.product.create({
             data: createProductDto
