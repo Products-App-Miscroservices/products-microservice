@@ -43,7 +43,7 @@ export class ReviewsController {
   delete(
     @Payload('id') id: string
   ) {
-    return this.reviewsService.delete(id);
+    return this.reviewsService.hardDelete(id);
   }
 
 }

@@ -136,13 +136,26 @@ export class ReviewsService extends PrismaClient implements OnModuleInit {
         })
     }
 
-    async delete(id: string) {
+    async softDelete(id: string) {
         await this.findOne(id);
+        
         return this.review.update({
             where: { id },
             data: {
                 available: false
             }
+        });
+    }
+
+    async hardDelete(id: string) {
+        await this.findOne(id);
+        await this.reaction.deleteMany({
+            where: {
+                reviewId: id
+            }
+        })
+        return this.review.delete({
+            where: { id }
         });
     }
 
